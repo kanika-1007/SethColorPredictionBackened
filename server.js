@@ -10,7 +10,7 @@ const port = 3000;
 
 // Middleware
 app.use(bodyParser.json());
-app.use(cors());
+app.use(cors({ origin: ['https://sethcolorprediction.netlify.app'] }));
 
 // MongoDB Connection
 const uri = "mongodb+srv://rk1007:Rk%4010070711@cluster0.clpac.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"; // Replace with your MongoDB connection string
