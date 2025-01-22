@@ -20,7 +20,7 @@ const setCollections = (users, results, globalData,activeBets) => {
     console.log("Dashboard routes: Collections initialized."); // Debug log
 };
 
-let globalTimer = { timeLeft: 60, currentBetNumber: 1 }; // Initialize global state
+let globalTimer = { timeLeft: 35, currentBetNumber: 1 }; // Initialize global state
 let manualResultState = {
     isManualResultEnabled: false,
     selectedColor: null,
@@ -61,7 +61,7 @@ router.post('/update-timer-state', (req, res) => {
 
 // Reset timer (if needed)
 router.post('/reset-timer', (req, res) => {
-    globalTimer = { timeLeft: 60, currentBetNumber: globalTimer.currentBetNumber + 1 };
+    globalTimer = { timeLeft: 35, currentBetNumber: globalTimer.currentBetNumber + 1 };
     res.status(200).json({ message: 'Timer reset.' });
 });
 
