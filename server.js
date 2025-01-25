@@ -8,9 +8,15 @@ const { router: withdrawalRoutes, setCollections: setWithdrawalCollections } = r
 const app = express();
 const port = 3000;
 
+const corsOptions = {
+    origin: 'https://sethcolorprediction.netlify.app', // Replace with your frontend domain
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Allow the necessary HTTP methods
+    credentials: true // If you need cookies or credentials with the request
+};
+
 // Middleware
 app.use(bodyParser.json());
-app.use(cors({ origin: ['https://sethcolorprediction.netlify.app'] }));
+app.use(cors(corsOptions));
 
 // MongoDB Connection
 const uri = "mongodb+srv://rk1007:Rk%4010070711@cluster0.clpac.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"; // Replace with your MongoDB connection string
