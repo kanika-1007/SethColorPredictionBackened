@@ -34,7 +34,7 @@ const updateTimer = () => {
 
     // Store the timer state in the database
     globalDataCollection.updateOne(
-        { key: 'timerState' },
+        { key: 'timeLeft' },
         { $set: { timeLeft: globalTimer.timeLeft, currentBetNumber: globalTimer.currentBetNumber } },
         { upsert: true } // Create the entry if it doesn't exist
     );
@@ -70,13 +70,16 @@ router.post('/set-manual-result', (req, res) => {
 
 // Fetch current timer state
 // Endpoint to get the current timer state and bet number
+// Fetch current timer state and bet number
 router.get('/timer-state', async (req, res) => {
     try {
-        const data = await globalDataCollection.findOne({ key: 'timerState' });
+        // Fetch current timeLeft
+        const timeLeftData = await globalDataCollection.findOne({ key: 'timeLeft' });
+        const timeLeft = timeLeftData?.value || 35; // Default to 35 seconds if not found
 
-        // If no data, initialize default values
-        const timeLeft = data?.timeLeft || 35; // Default to 35 seconds if not found
-        const currentBetNumber = data?.currentBetNumber || 1; // Default to 1 if not found
+        // Fetch current bet number
+        const betNumberData = await globalDataCollection.findOne({ key: 'currentBetNumber' });
+        const currentBetNumber = betNumberData?.value || 1; // Default to 1 if not found
 
         res.status(200).json({ timeLeft, currentBetNumber });
     } catch (err) {
@@ -85,17 +88,24 @@ router.get('/timer-state', async (req, res) => {
     }
 });
 
-// Update timer state
-// Endpoint to update the timer state and current bet number
+
+// Update timer state and current bet number
 router.post('/update-timer-state', async (req, res) => {
     const { timeLeft, currentBetNumber } = req.body;
 
     try {
-        // Update the timer state and current bet number in the global data collection
+        // Update the timeLeft key in the globalData collection
         await globalDataCollection.updateOne(
-            { key: 'timerState' },
-            { $set: { timeLeft, currentBetNumber } },
-            { upsert: true } // Create the entry if it doesn't exist
+            { key: 'timeLeft' }, // Find the key "timeLeft"
+            { $set: { value: timeLeft } }, // Update its value
+            { upsert: true } // If it doesn't exist, create it
+        );
+
+        // Update the currentBetNumber key in the globalData collection
+        await globalDataCollection.updateOne(
+            { key: 'currentBetNumber' }, // Find the key "currentBetNumber"
+            { $set: { value: currentBetNumber } }, // Update its value
+            { upsert: true } // If it doesn't exist, create it
         );
 
         res.status(200).json({ message: 'Timer state updated.' });
@@ -104,6 +114,7 @@ router.post('/update-timer-state', async (req, res) => {
         res.status(500).json({ message: 'Failed to update timer state.' });
     }
 });
+
 
 
 // Reset timer (if needed)
