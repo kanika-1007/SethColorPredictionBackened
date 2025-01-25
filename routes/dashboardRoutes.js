@@ -21,27 +21,6 @@ const setCollections = (users, results, globalData,activeBets) => {
 };
 
 let globalTimer = { timeLeft: 35, currentBetNumber: 1 }; // Initialize global state
-const timerInterval = 1000; // Update timer every second (1000ms)
-const updateTimer = () => {
-    // Decrease time by 1 second
-    if (globalTimer.timeLeft > 0) {
-        globalTimer.timeLeft -= 1;
-    } else {
-        // When the timer reaches 0, move to the next bet number
-        globalTimer.timeLeft = 35; // Reset timer to 35 seconds
-        globalTimer.currentBetNumber += 1; // Increment bet number
-    }
-
-    // Store the timer state in the database
-    globalDataCollection.updateOne(
-        { key: 'timeLeft' },
-        { $set: { timeLeft: globalTimer.timeLeft, currentBetNumber: globalTimer.currentBetNumber } },
-        { upsert: true } // Create the entry if it doesn't exist
-    );
-};
-setInterval(updateTimer, timerInterval);
-
-
 let manualResultState = {
     isManualResultEnabled: false,
     selectedColor: null,
