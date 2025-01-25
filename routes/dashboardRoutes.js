@@ -25,6 +25,11 @@ let globalTimer = { timeLeft: 35, currentBetNumber: 1 }; // Default state
 const timerInterval = 1000; // Update every second (1000ms)
 
 const updateTimer = async () => {
+        if (!globalDataCollection) {
+        console.error("globalDataCollection is not initialized.");
+        return;  // Exit the function if collection is not initialized
+    }
+    
     // Decrease time by 1 second
     if (globalTimer.timeLeft > 0) {
         globalTimer.timeLeft -= 1;
