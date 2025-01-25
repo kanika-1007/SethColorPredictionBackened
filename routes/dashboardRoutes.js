@@ -56,7 +56,7 @@ const updateTimer = async () => {
 }
 
 // Fetch current timer state
-router.get('/timer-state', (req, res) => {
+router.get('/timer-state',async (req, res) => {
     try {
         const globalData = await globalDataCollection.findOne({ key: 'timeLeft' });
         res.status(200).json({ timeLeft: globalData?.value || 35 });
@@ -66,7 +66,7 @@ router.get('/timer-state', (req, res) => {
 });
 
 // Update timer state
-router.post('/update-timer-state', (req, res) => {
+router.post('/update-timer-state',async (req, res) => {
     const { timeLeft, currentBetNumber } = req.body;
   try {
         await globalDataCollection.updateOne(
