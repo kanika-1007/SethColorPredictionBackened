@@ -22,17 +22,11 @@ const setCollections = (users, results, globalData, activeBets) => {
 
 // Initialize global state for the timer
 let globalTimer = { timeLeft: 35, currentBetNumber: 1 }; // Default state
-let timerStarted = false;
-
 const updateTimer = async () => {
+    // Ensure the globalDataCollection is available before running
     if (!globalDataCollection) {
         console.error("globalDataCollection is not initialized.");
-        return;  // Exit early if the collection is not initialized
-    }
-
-    if (!timerStarted) {
-        timerStarted = true; // Prevent starting the timer multiple times
-        console.log("Starting timer...");
+        return;  // Prevent the timer from running if collection isn't available
     }
 
     // Decrease time by 1 second
@@ -45,6 +39,7 @@ const updateTimer = async () => {
     }
 
     try {
+        // Store the updated timer state and bet number in the database
         await globalDataCollection.updateOne(
             { key: 'timeLeft' },
             { $set: { value: globalTimer.timeLeft } },
@@ -61,21 +56,21 @@ const updateTimer = async () => {
     }
 };
 
-// Ensure `setInterval` starts only after the collections are initialized
+// Start timer only after the collections are set
 const startTimer = () => {
     if (globalDataCollection) {
-        setInterval(updateTimer, timerInterval);
+        setInterval(updateTimer, timerInterval); // Only start after collections are set
+        console.log("Timer started successfully!");
     } else {
-        console.error("Error: globalDataCollection is not initialized.");
+        console.error("Error: globalDataCollection is not available.");
     }
 };
 
-// Initialize the timer only once the collections are ready
-if (globalDataCollection) {
-    startTimer();
-} else {
-    console.error("Error: globalDataCollection is not available.");
-}
+// Only start the timer after the collections have been initialized
+router.post('/start-timer', (req, res) => {
+    startTimer(); // Start the timer when this endpoint is hit (or when collections are set)
+    res.status(200).json({ message: "Timer started." });
+});
 
 // Manual result state (for manual bets)
 let manualResultState = {
