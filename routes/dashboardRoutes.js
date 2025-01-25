@@ -22,14 +22,19 @@ const setCollections = (users, results, globalData, activeBets) => {
 
 // Initialize global state for the timer
 let globalTimer = { timeLeft: 35, currentBetNumber: 1 }; // Default state
-const timerInterval = 1000; // Update every second (1000ms)
+let timerStarted = false;
 
 const updateTimer = async () => {
-        if (!globalDataCollection) {
+    if (!globalDataCollection) {
         console.error("globalDataCollection is not initialized.");
-        return;  // Exit the function if collection is not initialized
+        return;  // Exit early if the collection is not initialized
     }
-    
+
+    if (!timerStarted) {
+        timerStarted = true; // Prevent starting the timer multiple times
+        console.log("Starting timer...");
+    }
+
     // Decrease time by 1 second
     if (globalTimer.timeLeft > 0) {
         globalTimer.timeLeft -= 1;
@@ -39,7 +44,6 @@ const updateTimer = async () => {
         globalTimer.currentBetNumber += 1; // Increment bet number
     }
 
-    // Store the updated timer state and bet number in the database
     try {
         await globalDataCollection.updateOne(
             { key: 'timeLeft' },
@@ -57,8 +61,21 @@ const updateTimer = async () => {
     }
 };
 
-// Set the interval for updating the timer every second
-setInterval(updateTimer, timerInterval);
+// Ensure `setInterval` starts only after the collections are initialized
+const startTimer = () => {
+    if (globalDataCollection) {
+        setInterval(updateTimer, timerInterval);
+    } else {
+        console.error("Error: globalDataCollection is not initialized.");
+    }
+};
+
+// Initialize the timer only once the collections are ready
+if (globalDataCollection) {
+    startTimer();
+} else {
+    console.error("Error: globalDataCollection is not available.");
+}
 
 // Manual result state (for manual bets)
 let manualResultState = {
