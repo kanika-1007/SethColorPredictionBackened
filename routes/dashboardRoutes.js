@@ -22,6 +22,8 @@ const setCollections = (users, results, globalData, activeBets) => {
 
 // Initialize global state for the timer
 let globalTimer = { timeLeft: 35, currentBetNumber: 1 }; // Default state
+let timerStarted = false;
+let timerInterval = 1000; // Define the interval (1 second)
 const updateTimer = async () => {
     // Ensure the globalDataCollection is available before running
     if (!globalDataCollection) {
