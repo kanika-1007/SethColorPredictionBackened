@@ -143,6 +143,11 @@ router.get('/result-history', async (req, res) => {
 router.post('/result-history', async (req, res) => {
     const { resultEntry } = req.body;
     try {
+        // Check if the result with the same bet number already exists
+        const existingResult = await resultsCollection.findOne({ betNumber: resultEntry.betNumber });
+        if (existingResult) {
+            return res.status(400).json({ message: 'Duplicate bet number detected.' });
+        }
         await resultsCollection.insertOne(resultEntry);
         res.status(200).json({ message: 'Result history updated.' });
     } catch (err) {
