@@ -2,17 +2,17 @@ const express = require('express');
 const router = express.Router();
 const { ObjectId } = require('mongodb');
 
-let usersCollection, resultsCollection, globalDataCollection, activeBetsCollection;
+let usersCollection, resultsCollection, globalDataCollection,activeBetsCollection;
 
 router.use((req, res, next) => {
-    if (!usersCollection || !resultsCollection || !globalDataCollection || !activeBetsCollection) {
+    if (!usersCollection || !resultsCollection || !globalDataCollection|| !activeBetsCollection) {
         console.error("Dashboard routes: Database not initialized."); // Add a log
         return res.status(500).json({ message: 'Database not initialized.' });
     }
     next();
 });
 
-const setCollections = (users, results, globalData, activeBets) => {
+const setCollections = (users, results, globalData,activeBets) => {
     usersCollection = users;
     resultsCollection = results;
     globalDataCollection = globalData;
@@ -20,70 +20,18 @@ const setCollections = (users, results, globalData, activeBets) => {
     console.log("Dashboard routes: Collections initialized."); // Debug log
 };
 
-// Initialize global state for the timer
-let globalTimer = { timeLeft: 35, currentBetNumber: 1 }; // Default state
-let timerStarted = false;
-let timerInterval = 1000; // Define the interval (1 second)
-const updateTimer = async () => {
-    // Ensure the globalDataCollection is available before running
-    if (!globalDataCollection) {
-        console.error("globalDataCollection is not initialized.");
-        return;  // Prevent the timer from running if collection isn't available
-    }
-
-    // Decrease time by 1 second
-    if (globalTimer.timeLeft > 0) {
-        globalTimer.timeLeft -= 1;
-    } else {
-        // When the timer reaches 0, move to the next bet number
-        globalTimer.timeLeft = 35; // Reset timer to 35 seconds
-        globalTimer.currentBetNumber += 1; // Increment bet number
-    }
-
-    try {
-        // Store the updated timer state and bet number in the database
-        await globalDataCollection.updateOne(
-            { key: 'timeLeft' },
-            { $set: { value: globalTimer.timeLeft } },
-            { upsert: true } // Create entry if not exists
-        );
-
-        await globalDataCollection.updateOne(
-            { key: 'currentBetNumber' },
-            { $set: { value: globalTimer.currentBetNumber } },
-            { upsert: true } // Create entry if not exists
-        );
-    } catch (err) {
-        console.error('Error updating timer state:', err);
-    }
-};
-
-// Start timer only after the collections are set
-const startTimer = () => {
-    if (globalDataCollection) {
-        setInterval(updateTimer, timerInterval); // Only start after collections are set
-        console.log("Timer started successfully!");
-    } else {
-        console.error("Error: globalDataCollection is not available.");
-    }
-};
-
-// Only start the timer after the collections have been initialized
-router.post('/start-timer', (req, res) => {
-    startTimer(); // Start the timer when this endpoint is hit (or when collections are set)
-    res.status(200).json({ message: "Timer started." });
-});
-
-// Manual result state (for manual bets)
+let globalTimer = { timeLeft: 35, currentBetNumber: 1 }; // Initialize global state
 let manualResultState = {
     isManualResultEnabled: false,
     selectedColor: null,
 };
 
+// Endpoint to fetch the manual result state
 router.get('/manual-result-state', (req, res) => {
     res.status(200).json(manualResultState);
 });
 
+// Endpoint to update the manual result state
 router.post('/manual-result-state', (req, res) => {
     const { isManualResultEnabled, selectedColor } = req.body;
     manualResultState.isManualResultEnabled = isManualResultEnabled;
@@ -91,53 +39,32 @@ router.post('/manual-result-state', (req, res) => {
     res.status(200).json({ message: 'Manual result state updated successfully.' });
 });
 
-// Fetch current timer state (remaining time and current bet number)
-router.get('/timer-state', async (req, res) => {
-    try {
-        const timeLeftData = await globalDataCollection.findOne({ key: 'timeLeft' });
-        const timeLeft = timeLeftData?.value || 35; // Default to 35 seconds if not found
 
-        const betNumberData = await globalDataCollection.findOne({ key: 'currentBetNumber' });
-        const currentBetNumber = betNumberData?.value || 1; // Default to 1 if not found
-
-        res.status(200).json({ timeLeft, currentBetNumber });
-    } catch (err) {
-        console.error('Error fetching timer state:', err);
-        res.status(500).json({ message: 'Failed to retrieve timer state.' });
-    }
+// Set Manual Result State
+router.post('/set-manual-result', (req, res) => {
+    const { isManualResultEnabled, selectedColor } = req.body;
+    manualResultState = { isManualResultEnabled, selectedColor };
+    res.status(200).json({ message: 'Manual result state updated.' });
 });
 
-// Update current timer state (timeLeft and currentBetNumber)
-router.post('/update-timer-state', async (req, res) => {
+// Fetch current timer state
+router.get('/timer-state', (req, res) => {
+    res.status(200).json(globalTimer);
+});
+
+// Update timer state
+router.post('/update-timer-state', (req, res) => {
     const { timeLeft, currentBetNumber } = req.body;
-
-    try {
-        await globalDataCollection.updateOne(
-            { key: 'timeLeft' },
-            { $set: { value: timeLeft } },
-            { upsert: true }
-        );
-
-        await globalDataCollection.updateOne(
-            { key: 'currentBetNumber' },
-            { $set: { value: currentBetNumber } },
-            { upsert: true }
-        );
-
-        res.status(200).json({ message: 'Timer state updated.' });
-    } catch (err) {
-        console.error('Error updating timer state:', err);
-        res.status(500).json({ message: 'Failed to update timer state.' });
-    }
+    globalTimer = { timeLeft, currentBetNumber };
+    res.status(200).json({ message: 'Timer state updated.' });
 });
 
-// Reset the timer (e.g., manually triggered)
+// Reset timer (if needed)
 router.post('/reset-timer', (req, res) => {
     globalTimer = { timeLeft: 35, currentBetNumber: globalTimer.currentBetNumber + 1 };
     res.status(200).json({ message: 'Timer reset.' });
 });
 
-// Add active bet (admin)
 router.post('/active-bets', async (req, res) => {
     const { betNo, betBlock, betAmount } = req.body;
 
@@ -150,7 +77,6 @@ router.post('/active-bets', async (req, res) => {
     }
 });
 
-// Fetch active bets based on the current bet number
 router.get('/active-bets/:currentBetNumber', async (req, res) => {
     const currentBetNumber = parseInt(req.params.currentBetNumber);
 
@@ -163,7 +89,7 @@ router.get('/active-bets/:currentBetNumber', async (req, res) => {
     }
 });
 
-// Fetch and update player history (bet history)
+// Fetch player history
 router.get('/player-history/:username', async (req, res) => {
     const { username } = req.params;
     try {
@@ -172,20 +98,25 @@ router.get('/player-history/:username', async (req, res) => {
             return res.status(404).json({ message: 'User not found.' });
         }
         const playerHistory = user.playerHistory || [];
-        res.status(200).json({ playerHistory });
+        res.status(200).json({ playerHistory});
     } catch (err) {
         console.error('Error fetching player history:', err);
         res.status(500).json({ message: 'Failed to retrieve player history.' });
     }
 });
 
+
+// Add player bet entry
 router.post('/player-history', async (req, res) => {
+    console.log("Incoming request:", req.body); // Debug log
     const { username, historyEntry } = req.body;
+
     try {
         const result = await usersCollection.updateOne(
             { username },
             { $push: { playerHistory: historyEntry } }
         );
+        console.log("Update result:", result); // Debug log
         if (result.matchedCount > 0) {
             res.status(200).json({ message: 'Player history updated.' });
         } else {
@@ -196,6 +127,7 @@ router.post('/player-history', async (req, res) => {
         res.status(500).json({ message: 'Failed to update player history.' });
     }
 });
+
 
 // Fetch global result history
 router.get('/result-history', async (req, res) => {
