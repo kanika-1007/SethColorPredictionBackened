@@ -25,71 +25,18 @@ let manualResultState = {
     isManualResultEnabled: false,
     selectedColor: null,
 };
-
-// Place bet endpoint
-router.post('/place-bet', async (req, res) => {
-    const { username, betAmount, betNo, selectedColor } = req.body;
-    
-    try {
-        // Fetch the user from the database
-        const user = await usersCollection.findOne({ username });
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found.' });
-        }
-
-        if (user.balance < betAmount) {
-            return res.status(400).json({ message: 'Insufficient balance for this bet.' });
-        }
-
-        // Subtract bet amount from the user's balance
-        const updatedBalance = user.balance - betAmount;
-
-        // Update the user balance
-        await usersCollection.updateOne(
-            { username },
-            { $set: { balance: updatedBalance } }
-        );
-
-        // Determine the result of the bet
-        const betResult = calculateBetResult(selectedColor);  // This should calculate if the user won or lost
-
-        let amountWon = 0;
-        if (betResult === 'win') {
-            // Calculate the amount won, e.g., betAmount * multiplier
-            amountWon = betAmount * 2;  // Example: win 2x the bet amount
-            await usersCollection.updateOne(
-                { username },
-                { $set: { balance: updatedBalance + amountWon } }
-            );
-        }
-
-        // Store the bet in the player's history
-        const historyEntry = {
-            betNo,
-            betAmount,
-            selectedColor,
-            status: betResult,
-            amountWon,
-            balanceAfterBet: updatedBalance + amountWon
-        };
-
-        await usersCollection.updateOne(
-            { username },
-            { $push: { playerHistory: historyEntry } }
-        );
-
-        // Respond with the updated balance and result
-        res.status(200).json({
-            message: `Bet placed successfully. You ${betResult} the bet.`,
-            balance: updatedBalance + amountWon, // Updated balance after bet
-            amountWon
-        });
-    } catch (err) {
-        console.error('Error placing bet:', err);
-        res.status(500).json({ message: 'Failed to place the bet.' });
+// Function to update the timer every second
+setInterval(() => {
+    globalTimer.timeLeft--;
+    if (globalTimer.timeLeft <= 0) {
+        // Reset or perform necessary actions when the timer finishes
+        globalTimer.timeLeft = 35;
     }
-});
+
+    // Update the timer state in the database or in-memory for clients to fetch
+    // Here we're simulating sending the updated timer to clients
+    io.emit('timer-update', globalTimer); // Emit via WebSocket or update API
+}, 1000);
 
 // Endpoint to fetch the manual result state
 router.get('/manual-result-state', (req, res) => {
