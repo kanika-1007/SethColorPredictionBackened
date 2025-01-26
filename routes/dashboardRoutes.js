@@ -35,7 +35,6 @@ setInterval(() => {
 
     // Update the timer state in the database or in-memory for clients to fetch
     // Here we're simulating sending the updated timer to clients
-    io.emit('timer-update', globalTimer); // Emit via WebSocket or update API
 }, 1000);
 
 // Endpoint to fetch the manual result state
