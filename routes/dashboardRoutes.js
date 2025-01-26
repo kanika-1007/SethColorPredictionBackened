@@ -31,6 +31,7 @@ setInterval(() => {
     if (globalTimer.timeLeft <= 0) {
         // Reset or perform necessary actions when the timer finishes
         globalTimer.timeLeft = 35;
+        globalTimer.currentBetNumber += 1; // Increment bet number
     }
 
     // Update the timer state in the database or in-memory for clients to fetch
