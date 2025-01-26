@@ -25,18 +25,6 @@ let manualResultState = {
     isManualResultEnabled: false,
     selectedColor: null,
 };
-// Function to update the timer every second
-setInterval(() => {
-    globalTimer.timeLeft--;
-    if (globalTimer.timeLeft <= 0) {
-        // Reset or perform necessary actions when the timer finishes
-        globalTimer.timeLeft = 35;
-        globalTimer.currentBetNumber += 1; // Increment bet number
-    }
-
-    // Update the timer state in the database or in-memory for clients to fetch
-    // Here we're simulating sending the updated timer to clients
-}, 1000);
 
 // Endpoint to fetch the manual result state
 router.get('/manual-result-state', (req, res) => {
@@ -61,10 +49,7 @@ router.post('/set-manual-result', (req, res) => {
 
 // Fetch current timer state
 router.get('/timer-state', (req, res) => {
-     res.json({
-        timeLeft: globalTimer.timeLeft,  // The remaining time
-        currentBetNumber: globalTimer.currentBetNumber,  // Current bet number
-    });
+     res.status(200).json(globalTimer);
 });
 
 // Update timer state
