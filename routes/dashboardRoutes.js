@@ -61,7 +61,10 @@ router.post('/set-manual-result', (req, res) => {
 
 // Fetch current timer state
 router.get('/timer-state', (req, res) => {
-    res.status(200).json(globalTimer);
+     res.json({
+        timeLeft: globalTimer.timeLeft,  // The remaining time
+        currentBetNumber: globalTimer.currentBetNumber,  // Current bet number
+    });
 });
 
 // Update timer state
