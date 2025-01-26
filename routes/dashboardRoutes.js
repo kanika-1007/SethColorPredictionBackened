@@ -111,39 +111,17 @@ router.post('/set-manual-result', (req, res) => {
     manualResultState = { isManualResultEnabled, selectedColor };
     res.status(200).json({ message: 'Manual result state updated.' });
 });
-const timerInterval = 1000; // Update timer every second (1000ms)
-const updateTimer = async () => {
-    if (globalTimer.timeLeft > 0) {
-        globalTimer.timeLeft -= 1;
-    } else {
-        globalTimer.timeLeft = 35; // Reset timer to 35 seconds
-    }
-}
 
 // Fetch current timer state
-router.get('/timer-state',async (req, res) => {
-    try {
-        const globalData = await globalDataCollection.findOne({ key: 'timeLeft' });
-        res.status(200).json({ timeLeft: globalData?.value || 35 });
-    } catch (err) {
-        res.status(500).json({ message: 'Failed to retrieve the timer' });
-    }
+router.get('/timer-state', (req, res) => {
+    res.status(200).json(globalTimer);
 });
 
 // Update timer state
-router.post('/update-timer-state',async (req, res) => {
+router.post('/update-timer-state', (req, res) => {
     const { timeLeft, currentBetNumber } = req.body;
-  try {
-        await globalDataCollection.updateOne(
-            { key: 'timeLeft' },
-            { $set: { value:globalTimer.timeLeft  } },
-            { upsert: true }
-        );
-        res.status(200).json({ message: 'Timer updated.' });
-    } catch (err) {
-        res.status(500).json({ message: 'Failed to update the current bet number.' });
-    }
-    setInterval(updateTimer, timerInterval);
+    globalTimer = { timeLeft, currentBetNumber };
+    res.status(200).json({ message: 'Timer state updated.' });
 });
 
 // Reset timer (if needed)
