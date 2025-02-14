@@ -74,6 +74,22 @@ app.post('/signup', async (req, res) => {
     }
 });
 
+app.post('/check-phone', async (req, res) => {
+    const { phone } = req.body;
+    try {
+        const existingUser = await usersCollection.findOne({ phone });
+        if (existingUser) {
+            return res.status(200).json({ exists: true });
+        } else {
+            return res.status(200).json({ exists: false });
+        }
+    } catch (err) {
+        console.error('Error checking phone number:', err);
+        res.status(500).json({ message: 'Error checking phone number.' });
+    }
+});
+
+
 // Login Route
 app.post('/login', async (req, res) => {
     const { phone, password } = req.body;
