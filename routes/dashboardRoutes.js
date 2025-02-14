@@ -54,7 +54,7 @@ router.post('/set-manual-result', (req, res) => {
 // Fetch current timer state
 router.get('/timer-state', (req, res) => {
     const timeElapsed = Date.now() - globalTimer.lastBetTimestamp;
-    let timeLeft = BET_INTERVAL - (timeElapsed % BET_INTERVAL);
+    const timeLeft = BET_INTERVAL - (timeElapsed % BET_INTERVAL);
 
     res.status(200).json({ timeLeft, currentBetNumber: globalTimer.currentBetNumber });
 });
