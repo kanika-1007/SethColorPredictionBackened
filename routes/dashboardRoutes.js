@@ -20,11 +20,7 @@ const setCollections = (users, results, globalData,activeBets) => {
     console.log("Dashboard routes: Collections initialized."); // Debug log
 };
 
-let globalTimer = { 
-    lastBetTimestamp: Date.now(),  // Stores the last bet round's start time
-    currentBetNumber: 1 
-};
-const BET_INTERVAL = 35000; // 35 seconds for each round
+let globalTimer = { timeLeft: 35, currentBetNumber: 1 }; // Initialize global state
 let manualResultState = {
     isManualResultEnabled: false,
     selectedColor: null,
@@ -53,20 +49,8 @@ router.post('/set-manual-result', (req, res) => {
 
 // Fetch current timer state
 router.get('/timer-state', (req, res) => {
-    const timeElapsed = Date.now() - globalTimer.lastBetTimestamp;
-    const timeLeft = BET_INTERVAL - (timeElapsed % BET_INTERVAL);
-
-    res.status(200).json({ timeLeft, currentBetNumber: globalTimer.currentBetNumber });
+     res.status(200).json(globalTimer);
 });
-
-// API to reset timer and increment bet number when a new round starts
-const resetGlobalTimer = () => {
-    globalTimer.lastBetTimestamp = Date.now();
-    globalTimer.currentBetNumber += 1;
-};
-
-// Automatically reset the global timer every 35 seconds
-setInterval(resetGlobalTimer, BET_INTERVAL);
 
 // Update timer state
 router.post('/update-timer-state', (req, res) => {
